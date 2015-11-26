@@ -1,0 +1,7 @@
+resolver: nightly-2015-11-25
+packages:
+- '.'
+- location:
+    git: git@github.com:agrafix/Spock-rest
+    commit: 0912786e6cb82512c776f32a90027e55eba1e281
+extra-deps: []
