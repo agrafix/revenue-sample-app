@@ -27,8 +27,8 @@ sqlite3 -init sample-data.sql database.sql
 
 ```bash
 # should fail
-curl -v --cookie "spockcookie=[COOKIE_VALUE_HERE]" -d '{"name": "Foo", "price": -1, "revenue": 5}' -H 'Content-Type: application/json' -X POST http://localhost:3000/api/item/create
+curl -v --cookie "spockcookie=[COOKIE_VALUE_HERE]" -d '{"name": "Foo", "price": -1, "revenue": 5}' -H 'Content-Type: application/json' -H 'Accept: application/json' -X POST http://localhost:3000/api/item/create
 
 # should succeed
-curl -v --cookie "spockcookie=[COOKIE_VALUE_HERE]" -d '{"name": "Foo", "price": 5.00, "revenue": 0.05}' -H 'Content-Type: application/json' -X POST http://localhost:3000/api/item/create
+curl -v --cookie "spockcookie=[COOKIE_VALUE_HERE]" -d '{"name": "FooBar", "price": 5.00, "revenue": 0.05}' -H 'Content-Type: application/json' -H 'Accept: application/json' -X POST http://localhost:3000/api/item/create
 ```
