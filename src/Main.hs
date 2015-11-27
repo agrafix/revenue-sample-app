@@ -1,4 +1,6 @@
 {-# LANGUAGE DataKinds         #-}
+{-# LANGUAGE DeriveAnyClass    #-}
+{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 import           Model
@@ -9,11 +11,14 @@ import           Views.Site
 import           Control.Monad
 import           Control.Monad.Logger
 import           Control.Monad.Trans
+import           Data.Aeson
 import           Data.Maybe
 import           Data.Monoid
 import qualified Data.Text                     as T
 import qualified Data.Text.Lazy                as TL
+import           Data.Validator
 import           Database.Persist.Sqlite       hiding (get)
+import           GHC.Generics
 import           Network.Wai.Middleware.Static
 import qualified Text.Blaze.Bootstrap          as H
 import           Text.Blaze.Html.Renderer.Text (renderHtml)
@@ -46,9 +51,26 @@ launchApp p =
                subcomponent "api" $
                     R.post (R.JSON R.:~> R.JSON R.:|: R.CtNull) ("item" <//> "create") createItem
 
-createItem :: Item -> SpockAction SqlBackend Session st ItemId
+createItem :: Item -> SpockAction SqlBackend Session st CreateItemResult
 createItem item =
-    runSQL $ insert item
+    case runValidator validateItem item of
+      Left errMsg -> return (CreateItemFailed errMsg)
+      Right checkedItem -> CreateItemOkay <$> runSQL (insert checkedItem)
+
+data CreateItemResult
+   = CreateItemOkay ItemId
+   | CreateItemFailed T.Text
+    deriving (Show, Eq, Generic, ToJSON)
+
+validateItem :: ValidationRule T.Text Item
+validateItem i =
+    do name <-
+           lengthBetween 5 10 "The length of the item name must be between 5 and 10" (itemName i)
+       price <-
+           conformsPred (>=0) "The price must be larger or equal to zero" (itemPrice i)
+       revenue <-
+           conformsPred (\r -> r >= 0 && r <= price) "The revenue must be smaller than the price" (itemRevenue i)
+       return $ Item name price revenue
 
 checkSession :: SpockActionCtx ctx SqlBackend Session st ()
 checkSession =

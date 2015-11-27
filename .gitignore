@@ -15,3 +15,5 @@ cabal.sandbox.config
 *.hp
 .stack-work/
 database.db
+database.db-shm
+database.db-wal
